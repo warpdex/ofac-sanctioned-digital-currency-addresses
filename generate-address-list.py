@@ -64,14 +64,6 @@ def write_addresses(addresses, asset, output_formats, outpath):
     if "JSON" in output_formats:
         write_addresses_json(addresses, asset, outpath)
 
-        # Create and write hash to COMMIT file
-    addresses_str = ''.join(sorted(addresses))  # Combine all addresses
-    hash_object = hashlib.sha256(addresses_str.encode())
-    hex_dig = hash_object.hexdigest()
-    
-    with open("{}/COMMIT".format(outpath), 'w') as commit_file:
-        commit_file.write(f"{asset}: {hex_dig}\n")
-
 
 def write_addresses_txt(addresses, asset, outpath):
     with open("{}/sanctioned_addresses_{}.txt".format(outpath, asset), 'w') as out:
@@ -102,6 +94,7 @@ def main():
     else:
         output_formats = args.format
 
+    all_addresses = []  # Collect all addresses across assets
     for asset in assets:
         address_id = get_address_id(root, asset)
         addresses = get_sanctioned_addresses(root, address_id)
@@ -110,10 +103,19 @@ def main():
         addresses = list(dict.fromkeys(addresses).keys())
         # sort addresses
         addresses.sort()
+        all_addresses.extend(addresses)
 
         write_addresses(addresses, asset, output_formats, args.outpath)
     
-
+    # Create hash of all addresses combined
+    all_addresses.sort()  # Sort all addresses for consistency
+    addresses_str = ''.join(all_addresses)
+    hash_object = hashlib.sha256(addresses_str.encode())
+    hex_dig = hash_object.hexdigest()
+    
+    # Write the combined hash to COMMIT file
+    with open("{}/COMMIT".format(args.outpath), 'w') as commit_file:
+        commit_file.write(f"{hex_dig}\n")
 
 
 if __name__ == "__main__":
