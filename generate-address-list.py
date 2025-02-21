@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 import argparse
 import pathlib
 import json
+import hashlib
 
 FEATURE_TYPE_TEXT = "Digital Currency Address - "
 NAMESPACE = {'sdn': 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/ADVANCED_XML'}
@@ -63,6 +64,14 @@ def write_addresses(addresses, asset, output_formats, outpath):
     if "JSON" in output_formats:
         write_addresses_json(addresses, asset, outpath)
 
+        # Create and write hash to COMMIT file
+    addresses_str = ''.join(sorted(addresses))  # Combine all addresses
+    hash_object = hashlib.sha256(addresses_str.encode())
+    hex_dig = hash_object.hexdigest()
+    
+    with open("{}/COMMIT".format(outpath), 'w') as commit_file:
+        commit_file.write(f"{asset}: {hex_dig}\n")
+
 
 def write_addresses_txt(addresses, asset, outpath):
     with open("{}/sanctioned_addresses_{}.txt".format(outpath, asset), 'w') as out:
@@ -103,6 +112,8 @@ def main():
         addresses.sort()
 
         write_addresses(addresses, asset, output_formats, args.outpath)
+    
+
 
 
 if __name__ == "__main__":
