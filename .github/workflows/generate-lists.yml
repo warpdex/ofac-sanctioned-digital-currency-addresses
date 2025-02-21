@@ -38,6 +38,7 @@ jobs:
         git checkout lists
         mv data/* .
         git add sanctioned_addresses_* -f
+        git add COMMIT -f
         git commit -m "Automatically updated lists: $(date)" -a || true
     - name: Push changes
       uses: ad-m/github-push-action@master
